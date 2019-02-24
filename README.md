@@ -23,6 +23,6 @@ Features:
 
 Block RAMs in the FPGA are used for tilemaps, pixel RAM, and palette, could be divided as appropriate.
 
-The engine in `main.c` uses a single tilemap as background, but the only thing that stops you from having several is to figure out a way to divide the access to tilemap and pixel RAM.
+The engine in `main.c` uses a single tilemap as background, but the only thing that stops you from having several is to figure out a way to divide the access to tilemap and pixel RAM (e.g. time division using multiple clock cycles per pixel, or wider than 8 bit internal memory interface to the block RAMs).
 
 A small demo can be seen at https://youtu.be/NOukEOLJctY
