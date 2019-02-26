@@ -63,3 +63,27 @@ Parts:
 - The above steps are pipelined over a few cycles, so the hsync, vsync, and blanking signals are delayed for the same number of cycles to match up at the output.
 
 All of the RAMs are instantiated in the top module; the tile and sprite renderers use the read interface `ReadChannel` to request data to be delivered the next cycle. This way, the submodules don't have to make as many assumptions about how the memories are set up and connected.
+
+### Tilemap renderer
+The `tilemap_renderer` implements a pipeline that looks something like this:
+
+                                                 tilemap RAM  tile palette index
+                                                       A    --------------------------------------------------
+                                                       |   /                                                  \
+                                                       V  / tile index                    bit addr             \
+                                         -> tile ---> read ----                         ------------            \
+                                        /   addr     tilemap   \                       /            \            \
+     x, y           x, y          x, y /                        V                     /              V            V           pixel
+    ------> scroll ------> scale -----+                        pixel addr ---> bpp --+--> read ---> extract ---> set palette ------>
+                                       \                        A             shift       pixel      pixel                    index
+                                        \ x, y in tile         /                            A
+                                         ----------------------                             |
+                                                                                            V
+                                                                                        pixel RAM
+
+The pixel data is transformed into a few different forms as it goes through the pipeline:
+- (x, y) coordinates - In this form, it's easy to apply scrolling and scaling
+- (tile index, coordinates in tile)
+- Pixel adress - Downshifted to support lower bits per pixel (bpp) modes
+- Pixel data - Processed to extract the desired bits in lower bpp modes
+	- The unused bits are filled in from the palette data index read from the tilemap, unless the pixel is 0 (transparent)
