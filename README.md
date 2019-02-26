@@ -65,7 +65,7 @@ Parts:
 All of the RAMs are instantiated in the top module; the tile and sprite renderers use the read interface `ReadChannel` to request data to be delivered the next cycle. This way, the submodules don't have to make as many assumptions about how the memories are set up and connected.
 
 ### Tilemap renderer
-The `tilemap_renderer` implements a pipeline that looks something like this:
+The `tilemap_renderer` module implements a pipeline that looks something like this:
 
                                                  tilemap RAM  tile palette index
                                                        A    --------------------------------------------------
@@ -87,3 +87,33 @@ The pixel data is transformed into a few different forms as it goes through the 
 - Pixel adress - Downshifted to support lower bits per pixel (bpp) modes
 - Pixel data - Processed to extract the desired bits in lower bpp modes
 	- The unused bits are filled in from the palette data index read from the tilemap, unless the pixel is 0 (transparent)
+
+### Sprite renderer
+The `sprite_renderer` module is split into an x (per pixel) and a y (per scanline) part, where the y part sets up the x part:
+
+                                            :
+           { -------- per scanline -------- : ------- per pixel -------- }
+           { --- shared between sprites --- : -- per sprite -- | - mix - } 
+                                            :
+
+         y            row addr,           bytes
+        ----> sprite --------------> row ------> row buffers
+              setup   active flag  transfer           A
+                A                 A  /  A   :         |
+                | sprite index,  /  /   |   :   x     V   pixels        pixel
+                +----------------  /    |   :  ----> row --------> mix ------->
+                | start transfer  /     |   :     renderers
+     hblank     |                /      V    
+    -------> control <-----------   pixel RAM
+     start               done
+
+The flow is a bit more complex than for the tilemap:
+- When hblank starts, the `sprite_renderer` module loops over each sprite in turn: (these resources are shared between the sprites)
+	- `sprite_setup` figures out the pixel RAM address to read the next sprite row from, and whether it will be visible on that line
+	- `sprite_line_buffer_transfer` copies the data bytes for the row from pixel RAM to the sprite's row buffer, if it will be visible
+- Each sprite has it's own `sprite_row` instance
+	- Assumes that the row buffer has already been filled with pixel data for the current row
+	- Outputs one pixel for each x position (0 when outside the sprite)
+- The pixels are mixed to output the first one with a nonzero color index
+The y part reads its registers during hblank, while the x part reads its registers continuously.
+The row transfers need to finish before the hblank period ends, or the sprites will try to read pixel RAM at the same time as the tile map.
