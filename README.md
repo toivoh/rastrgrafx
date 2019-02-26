@@ -115,5 +115,6 @@ The flow is a bit more complex than for the tilemap:
 	- Assumes that the row buffer has already been filled with pixel data for the current row
 	- Outputs one pixel for each x position (0 when outside the sprite)
 - The pixels are mixed to output the first one with a nonzero color index
+
 The y part reads its registers during hblank, while the x part reads its registers continuously.
-The row transfers need to finish before the hblank period ends, or the sprites will try to read pixel RAM at the same time as the tile map.
+The row transfers need to finish before the hblank period ends, or the sprites will try to read pixel RAM at the same time as the tile map. Also, the sprites might show up wrong because their row buffers weren't updated in time: the only safe time to update the row buffers in this design is during hblank.
