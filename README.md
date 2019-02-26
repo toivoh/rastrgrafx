@@ -1,4 +1,5 @@
-# rastrgrafx
+rastrgrafx
+==========
 rastrgrafx is an FPGA implementation of a simple scanline based 2d graphics engine with tilemap and sprites.
 
 The focus so far is on making a simple but customisable and extendable engine using a minimum of trickery. First and foremost, this has meant to try to keep the number of registers that hold actual state to a minimum (pipeline registers are ok). This also means that scanline effects should be very applicable to the engine: registers are sampled when they are used, or if need be, during hblank for the line before.
@@ -23,6 +24,6 @@ Features:
 
 Block RAMs in the FPGA are used for tilemaps, pixel RAM, and palette, could be divided as appropriate.
 
-The engine in `main.c` uses a single tilemap as background, but the only thing that stops you from having several is to figure out a way to divide the access to tilemap and pixel RAM (e.g. time division using multiple clock cycles per pixel, or wider than 8 bit internal memory interface to the block RAMs).
+The engine in `main.sv` uses a single tilemap as background, but the only thing that stops you from having several is to figure out a way to divide the access to tilemap and pixel RAM (e.g. time division using multiple clock cycles per pixel, or wider than 8 bit internal memory interface to the block RAMs).
 
 A small demo can be seen at https://youtu.be/NOukEOLJctY
